@@ -19,6 +19,7 @@
 #define LOG_TAG "bt_hci"
 
 #include "hci_layer.h"
+#include "btsnoop.h"
 
 #include <base/logging.h>
 #include "buffer_allocator.h"
@@ -47,6 +48,8 @@ extern void initialization_complete();
 extern void hci_event_received(BT_HDR* packet);
 extern void acl_event_received(BT_HDR* packet);
 extern void sco_data_received(BT_HDR* packet);
+
+extern const btsnoop_t* btsnoop;
 
 android::sp<IBluetoothHci> btHci;
 
@@ -91,6 +94,19 @@ class BluetoothHciCallbacks : public IBluetoothHciCallbacks {
   Return<void> scoDataReceived(const hidl_vec<uint8_t>& data) {
     BT_HDR* packet = WrapPacketAndCopy(MSG_HC_TO_STACK_HCI_SCO, data);
     sco_data_received(packet);
+    return Void();
+  }
+
+  Return<void> snoopVendorPacket(const hidl_vec<uint8_t>& data, bool is_received) {
+    BT_HDR* packet;
+    
+    if (is_received)
+      packet = WrapPacketAndCopy(MSG_HC_TO_STACK_HCI_EVT, data);
+    else
+      packet = WrapPacketAndCopy(MSG_STACK_TO_HC_HCI_CMD, data);
+    
+    btsnoop->capture(packet, is_received);
+    buffer_allocator->free(packet);
     return Void();
   }
 

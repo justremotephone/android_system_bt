@@ -86,7 +86,7 @@ static hci_t interface;
 
 // Modules we import and callbacks we export
 static const allocator_t* buffer_allocator;
-static const btsnoop_t* btsnoop;
+const btsnoop_t* btsnoop;
 static const packet_fragmenter_t* packet_fragmenter;
 
 static future_t* startup_future;
